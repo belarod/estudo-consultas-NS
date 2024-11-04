@@ -234,3 +234,56 @@ SELECT UPPER(SUBSTR(a.nome, 1, 1)) AS Inicial,
 FROM aluno a
 GROUP BY UPPER(SUBSTR(a.nome, 1, 1))
 ORDER BY Inicial;
+
+--View's, CTE's e Subconsultas, continuação
+
+ALTER TABLE estuda
+ADD nota_final DECIMAL(3, 1) CHECK (nota_final >= 0 AND nota_final <= 10);
+UPDATE estuda SET nota_final = 9.5 WHERE id_aluno = '09876543210';
+UPDATE estuda SET nota_final = 8.0 WHERE id_aluno = '10987654321';
+UPDATE estuda SET nota_final = 7.5 WHERE id_aluno = '21098765432';
+UPDATE estuda SET nota_final = 6.0 WHERE id_aluno = '32109876543';
+UPDATE estuda SET nota_final = 5.5 WHERE id_aluno = '43210987654';
+UPDATE estuda SET nota_final = 9.0 WHERE id_aluno = '54321098765';
+UPDATE estuda SET nota_final = 4.0 WHERE id_aluno = '65432109876';
+UPDATE estuda SET nota_final = 8.5 WHERE id_aluno = '76543210987';
+UPDATE estuda SET nota_final = 3.0 WHERE id_aluno = '87654321098';
+UPDATE estuda SET nota_final = 10.0 WHERE id_aluno = '98765432109';
+UPDATE estuda SET nota_final = 6.5 WHERE id_aluno = '09812345674';
+UPDATE estuda SET nota_final = 7.0 WHERE id_aluno = '10923456785';
+UPDATE estuda SET nota_final = 5.0 WHERE id_aluno = '21034567896';
+UPDATE estuda SET nota_final = 4.5 WHERE id_aluno = '32145678907';
+UPDATE estuda SET nota_final = 2.5 WHERE id_aluno = '43256789018';
+
+WITH Nota_Media_por_Disciplina AS (
+    SELECT d.nome AS Disciplina,
+           AVG(e.nota_final) AS Nota_Média
+    FROM estuda e
+    INNER JOIN disciplina d on e.id_disc = d.nome
+    GROUP BY d.nome
+)
+SELECT a.nome AS Aluno,
+       d.nome AS Disciplina,
+       e.nota_final AS Nota_Final
+FROM estuda e
+INNER JOIN aluno a ON e.id_aluno = a.cpf
+INNER JOIN disciplina d ON e.id_disc = d.nome
+INNER JOIN Nota_Media_por_Disciplina nmpd ON d.nome = nmpd.Disciplina
+WHERE e.nota_final < nmpd.Nota_Média;
+
+
+
+WITH Alunos_por_Disciplina AS (
+    SELECT p.nome AS Professor,
+        COUNT(e.id_aluno) AS Alunos
+    FROM professor p
+    INNER JOIN ministra m on p.cpf = m.id_prof
+    INNER JOIN estuda e on m.id_disc = e.id_disc
+    GROUP BY m.id_disc || '-' || p.nome
+)
+SELECT Professor,
+       MIN(Alunos) AS Min_Alunos,
+       MAX(Alunos) AS Max_Alunos,
+       AVG(Alunos) AS Media_Alunos
+FROM Alunos_por_Disciplina AS ap
+GROUP BY Professor;
